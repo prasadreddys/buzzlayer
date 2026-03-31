@@ -214,8 +214,6 @@ app.post("/api/tasks/complete", async (req, res) => {
       case 'comment':
         verified = await twitter.verifyComment(campaign.tweetId, user.twitterId, campaign.expectedText);
         break;
-      default:
-        return res.status(400).json({ error: 'Unsupported campaign taskType' });
     }
 
     if (!verified) {

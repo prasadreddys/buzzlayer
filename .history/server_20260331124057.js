@@ -100,16 +100,14 @@ app.get("/api/auth/twitter/callback", async (req, res) => {
   }
 
   try {
-    // Exchange code for access token (URL encoded body required)
-    const tokenParams = new URLSearchParams({
+    // Exchange code for access token
+    const tokenResponse = await axios.post('https://api.twitter.com/2/oauth2/token', {
       code,
       grant_type: 'authorization_code',
       client_id: process.env.TWITTER_API_KEY,
       redirect_uri: process.env.TWITTER_APP_CALLBACK_URL,
       code_verifier: 'challenge'
-    });
-
-    const tokenResponse = await axios.post('https://api.twitter.com/2/oauth2/token', tokenParams.toString(), {
+    }, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': `Basic ${Buffer.from(`${process.env.TWITTER_API_KEY}:${process.env.TWITTER_API_KEY_SECRET}`).toString('base64')}`
@@ -170,8 +168,8 @@ app.post("/api/tasks/complete", async (req, res) => {
 
   if (!user) return res.status(404).json({ error: "User not found" });
 
-  if (!user.twitterConnected || !user.twitterAccessToken || !user.twitterId) {
-    return res.status(400).json({ error: "Twitter account not connected or missing user data" });
+  if (!user.twitterConnected || !user.twitterAccessToken) {
+    return res.status(400).json({ error: "Twitter account not connected" });
   }
 
   const campaign = await Campaign.findById(campaignId);
@@ -182,11 +180,6 @@ app.post("/api/tasks/complete", async (req, res) => {
   // Check if campaign is expired
   if (campaign.expiresAt && new Date() > new Date(campaign.expiresAt)) {
     return res.status(400).json({ error: "Campaign has expired" });
-  }
-
-  // Check max users
-  if (campaign.maxUsers && campaign.completedCount >= campaign.maxUsers) {
-    return res.status(400).json({ error: "Campaign has reached maximum participants" });
   }
 
   // Check if user already completed this campaign
@@ -214,8 +207,6 @@ app.post("/api/tasks/complete", async (req, res) => {
       case 'comment':
         verified = await twitter.verifyComment(campaign.tweetId, user.twitterId, campaign.expectedText);
         break;
-      default:
-        return res.status(400).json({ error: 'Unsupported campaign taskType' });
     }
 
     if (!verified) {

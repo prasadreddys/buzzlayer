@@ -165,7 +165,7 @@ bot.action(/verify_(.+)/, async (ctx) => {
 
   // Call the API to verify task completion
   try {
-    const response = await axios.post(`${BASE_URL}/api/tasks/complete`,
+    const response = await axios.post(`${process.env.BASE_URL || 'http://localhost:3000'}/api/tasks/complete`,
       { campaignId, telegramId }
     );
 
@@ -190,7 +190,7 @@ bot.command('referral', async (ctx) => {
 
   if (!user) return ctx.reply("Please /start first");
 
-  const referralLink = `https://t.me/${BOT_USERNAME}?start=${user.referralCode}`;
+  const referralLink = `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${user.referralCode}`;
   const referralCount = user.referredUsers?.length || 0;
 
   await ctx.reply(

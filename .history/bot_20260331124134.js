@@ -165,7 +165,7 @@ bot.action(/verify_(.+)/, async (ctx) => {
 
   // Call the API to verify task completion
   try {
-    const response = await axios.post(`${BASE_URL}/api/tasks/complete`,
+    const response = await axios.post(`${process.env.BASE_URL || 'http://localhost:3000'}/api/tasks/complete`,
       { campaignId, telegramId }
     );
 

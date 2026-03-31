@@ -170,8 +170,8 @@ app.post("/api/tasks/complete", async (req, res) => {
 
   if (!user) return res.status(404).json({ error: "User not found" });
 
-  if (!user.twitterConnected || !user.twitterAccessToken || !user.twitterId) {
-    return res.status(400).json({ error: "Twitter account not connected or missing user data" });
+  if (!user.twitterConnected || !user.twitterAccessToken) {
+    return res.status(400).json({ error: "Twitter account not connected" });
   }
 
   const campaign = await Campaign.findById(campaignId);
@@ -182,11 +182,6 @@ app.post("/api/tasks/complete", async (req, res) => {
   // Check if campaign is expired
   if (campaign.expiresAt && new Date() > new Date(campaign.expiresAt)) {
     return res.status(400).json({ error: "Campaign has expired" });
-  }
-
-  // Check max users
-  if (campaign.maxUsers && campaign.completedCount >= campaign.maxUsers) {
-    return res.status(400).json({ error: "Campaign has reached maximum participants" });
   }
 
   // Check if user already completed this campaign
@@ -214,8 +209,6 @@ app.post("/api/tasks/complete", async (req, res) => {
       case 'comment':
         verified = await twitter.verifyComment(campaign.tweetId, user.twitterId, campaign.expectedText);
         break;
-      default:
-        return res.status(400).json({ error: 'Unsupported campaign taskType' });
     }
 
     if (!verified) {
