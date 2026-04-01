@@ -7,13 +7,6 @@
       "config": {
         "includeFiles": ["**/*"]
       }
-    },
-    {
-      "src": "frontend/**",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "frontend/build"
-      }
     }
   ],
   "routes": [
@@ -23,7 +16,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/$1"
+      "dest": "/index.js"
     }
   ],
   "env": {
