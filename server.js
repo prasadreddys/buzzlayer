@@ -40,7 +40,9 @@ mongoose.connection.on("error", (err) => console.error("MongoDB error", err));
 
 // Health check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date() });
+  const dbState = mongoose.connection.readyState; // 0 = disconnected, 1 = connected
+  const dbStatus = dbState === 1 ? "connected" : "disconnected";
+  res.json({ status: "ok", timestamp: new Date(), dbStatus });
 });
 
 // Telegram auto login (placeholder: public key for mini app)
@@ -249,17 +251,33 @@ app.post("/api/tasks/complete", async (req, res) => {
 
 // Leaderboard
 app.get("/api/leaderboard", async (req, res) => {
-  const top = await User.find({}).sort({ points: -1 }).limit(20);
-  res.json(top);
+  if (mongoose.connection.readyState !== 1) {
+    console.error("DB not connected for /api/leaderboard", mongoose.connection.readyState);
+    return res.status(503).json({ error: "Database not connected" });
+  }
+
+  try {
+    const top = await User.find({}).sort({ points: -1 }).limit(20);
+    res.json(top);
+  } catch (error) {
+    console.error("Failed to fetch leaderboard", error);
+    res.status(500).json({ error: "Failed to fetch leaderboard", details: error.message });
+  }
 });
 
 // Get active campaigns
 app.get("/api/campaigns", async (req, res) => {
+  if (mongoose.connection.readyState !== 1) {
+    console.error("DB not connected for /api/campaigns", mongoose.connection.readyState);
+    return res.status(503).json({ error: "Database not connected" });
+  }
+
   try {
     const campaigns = await Campaign.find({ isActive: true }).sort({ createdAt: -1 });
     res.json(campaigns);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch campaigns" });
+    console.error("Failed to fetch campaigns", error);
+    res.status(500).json({ error: "Failed to fetch campaigns", details: error.message });
   }
 });
 
