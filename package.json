@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "build": "cd frontend && npm install && npm run build",
+    "build": "cd frontend && npm ci && npm run build",
     "lint": "eslint . --ext .js,.mjs"
   },
   "keywords": ["telegram", "x", "twitter", "web3", "bot", "growth"],
