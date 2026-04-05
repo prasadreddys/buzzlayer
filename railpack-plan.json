@@ -1,0 +1,8 @@
+{
+  "name": "buzzlayer",
+  "build": {
+    "installCommand": "npm install",
+    "buildCommand": "npm run build",
+    "startCommand": "npm run start"
+  }
+}

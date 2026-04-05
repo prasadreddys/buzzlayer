@@ -12,6 +12,10 @@
   "keywords": ["telegram", "x", "twitter", "web3", "bot", "growth"],
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "npm@10.0.0",
   "dependencies": {
     "axios": "^1.5.0",
     "cors": "^2.8.5",
