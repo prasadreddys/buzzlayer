@@ -27,6 +27,9 @@ app.use(express.static(path.join(__dirname, 'frontend/build')));
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/telegram_x_growth";
 const JWT_SECRET = process.env.JWT_SECRET || "super_secret";
 
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/telegram_x_growth";
+const JWT_SECRET = process.env.JWT_SECRET || "super_secret";
+
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
