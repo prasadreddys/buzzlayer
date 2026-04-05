@@ -24,25 +24,45 @@ app.use(express.json());
 // Serve static files from frontend build
 app.use(express.static(path.join(__dirname, 'frontend/build')));
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/telegram_x_growth";
+const MONGODB_URI = (process.env.MONGODB_URI || "mongodb://localhost:27017/telegram_x_growth").trim();
 const JWT_SECRET = process.env.JWT_SECRET || "super_secret";
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).catch(err => {
-  console.error("MongoDB connection failed:", err.message);
-  console.log("Server will continue without database functionality");
-});
+mongoose.set('strictQuery', false);
 
-mongoose.connection.on("connected", () => console.log("✅ MongoDB connected"));
-mongoose.connection.on("error", (err) => console.error("MongoDB error", err));
+const connectWithRetry = async () => {
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000,
+    });
+    console.log("✅ MongoDB connected");
+  } catch (err) {
+    console.error("❌ MongoDB connection failed:", err.message);
+    if (err.reason) console.error("MongoDB reason:", err.reason);
+    if (err.stack) console.error(err.stack);
+    console.log("Waiting 5 seconds to retry MongoDB connection...");
+    setTimeout(connectWithRetry, 5000);
+  }
+};
+
+connectWithRetry();
+
+mongoose.connection.on("connected", () => console.log("✅ MongoDB connection event: connected"));
+mongoose.connection.on("disconnected", () => console.log("⚠️ MongoDB connection event: disconnected"));
+mongoose.connection.on("error", (err) => console.error("❌ MongoDB connection event error:", err.message));
 
 // Health check
 app.get("/api/health", (req, res) => {
   const dbState = mongoose.connection.readyState; // 0 = disconnected, 1 = connected
   const dbStatus = dbState === 1 ? "connected" : "disconnected";
-  res.json({ status: "ok", timestamp: new Date(), dbStatus });
+  res.json({
+    status: "ok",
+    timestamp: new Date(),
+    dbStatus,
+    mongodbUriSet: !!process.env.MONGODB_URI,
+    mongodbUriHost: process.env.MONGODB_URI ? process.env.MONGODB_URI.split('@')[1]?.split('/')[0] : null,
+  });
 });
 
 // Telegram auto login (placeholder: public key for mini app)
